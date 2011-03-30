@@ -1,5 +1,6 @@
 #ifndef ELINK_H
 #define ELINK_H
+#include <Evas.h>
 
 typedef struct elink_obj {
 	int x;

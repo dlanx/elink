@@ -15,6 +15,11 @@
  */
 
 elink_obj_t *elink_data = NULL;
+elink_obj_t *es = NULL;
+
+int elink_x = DEFAULT_X;
+int elink_y = DEFAULT_Y;
+
 void usage(int argc, char *argv[])
 {
 	I("Usage: %s \n", argv[0]);
@@ -32,17 +37,30 @@ Eina_Bool elink_timer(void *data)
 static void
 elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 {
-	Evas_Object *o = (Evas_Object *)data;
+	elink_obj_t *eo = (elink_obj_t *)data;
+	if (!es) {
+		es = eo;
+		return;
+	}
 
-	elink_dbg("mouse down, catch\n");
-	evas_object_color_set(o, 0, 0, 0, 0);
-	evas_object_show(o);
+	if ((es->x == eo->x) || (es->y == eo->y)) {
+		elink_dbg("mouse down, previous: x(%d) y(%d)\n", es->x, es->y);
+		elink_dbg("mouse down, current: x(%d) y(%d)\n", eo->x, eo->y);
+		evas_object_color_set(es->rect, 0, 0, 0, 0);
+		evas_object_show(es->rect);
+
+		evas_object_color_set(eo->rect, 0, 0, 0, 0);
+		evas_object_show(eo->rect);
+	}
+	es = NULL;
 }
 
 static void
 elink_mouse_wheel(void *data, Evas *e, Evas_Object *obj, void *event_info)
 {
-	elink_info("mouse wheel, catch\n");
+	Evas_Object *o = (Evas_Object *)data;
+	elink_obj_t *eo = container_of(o, elink_obj_t, rect);
+	elink_info("mouse wheel, catch x(%d) y(%d)\n", eo->x, eo->y);
 }
 
 static void
@@ -77,15 +95,15 @@ int elink_object_rect_create(Evas *ev, elink_obj_t *eo)
 	evas_object_event_callback_add(eo->rect,
 		EVAS_CALLBACK_MOUSE_DOWN,
 		&elink_mouse_down,
-		eo->rect);
+		eo);
 
 	evas_object_event_callback_add(eo->rect,
 		EVAS_CALLBACK_MOUSE_WHEEL,
 		&elink_mouse_wheel,
 		eo->rect);
 
-	evas_object_resize(eo->rect, RWIDTH, RHEIGHT);
-	evas_object_move(eo->rect, RWIDTH * eo->x, RHEIGHT * eo->y);
+	evas_object_resize(eo->rect, WIDTH, HEIGHT);
+	evas_object_move(eo->rect, WIDTH * eo->x, HEIGHT * eo->y);
 
 	evas_object_color_set(eo->rect, 20 * eo->x, 20 * eo->y,
 		13 * eo->x + 5 * eo->y, 255);
@@ -103,14 +121,14 @@ int elink_object_text_set(Evas *ev, elink_obj_t *eo)
 	evas_object_layer_set(o, 10);
 	evas_object_color_set(o, 255, 0, 0, 255);
 
-	evas_object_resize(o, eo->x * RWIDTH, eo->y * RHEIGHT);
+	evas_object_resize(o, eo->x * WIDTH, eo->y * HEIGHT);
 
 	snprintf(buf, 32, "%c.%c", 'A' + eo->x, '0' + eo->y);
 
 	evas_object_text_text_set(o, buf);
 	evas_object_text_font_set(o, "Vera", 10);
 	evas_object_pass_events_set(o, 1);
-	evas_object_move(o, eo->x * RWIDTH, eo->y * RHEIGHT);
+	evas_object_move(o, eo->x * WIDTH, eo->y * HEIGHT);
 	evas_object_show(o);
 }
 
@@ -120,15 +138,13 @@ elm_main(int argc, char *argv[])
 	Evas_Object *win;
 	Evas *ev;
 	elink_obj_t *e;
-	int i, j, rw, rh, ret = 0;
+	int i, j, ret = 0;
 
-	elink_alogrithm_init();
+	elink_algorithm_init();
 	elink_log_init();
 
-	elink_data = (elink_obj_t *) malloc(DEFAULT_WIDTH * DEFAULT_HEIGHT
+	elink_data = (elink_obj_t *) malloc(elink_x * elink_y
 		* sizeof(elink_obj_t));
-
-	elink_rparse_data();
 
 	win = elm_win_add(NULL, "main", ELM_WIN_BASIC);
 
@@ -141,16 +157,13 @@ elm_main(int argc, char *argv[])
 	evas_object_smart_callback_add(win, "delete,request",
 		elink_win_del, NULL);
 
-	evas_object_resize(win, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-	rw = WINDOW_WIDTH / DEFAULT_WIDTH;
-	rh = WINDOW_HEIGHT / DEFAULT_HEIGHT;
+	evas_object_resize(win, elink_x * WIDTH, elink_y * HEIGHT);
 
 	ev = evas_object_evas_get(win);
 
-	for (i=0; i<DEFAULT_HEIGHT; i++) {
-		for (j=0; j<DEFAULT_WIDTH; j++) {
-			e = elink_data + i * DEFAULT_HEIGHT + j;
+	for (i=0; i < elink_x; i++) {
+		for (j=0; j < elink_y; j++) {
+			e = elink_data + i * elink_x + j;
 			e->x = i; e->y = j;
 			elink_object_rect_create(ev, e);
 		}
@@ -163,7 +176,7 @@ elm_main(int argc, char *argv[])
 
 	free(elink_data);
 	elink_log_shutdown();
-	elink_alogrithm_shutdown();
+	elink_algorithm_shutdown();
 	elm_shutdown();
 	return ret;
 }

@@ -4,8 +4,7 @@
 #define ELINKER_ROWS 6
 #define ELINKER_COLS 6
 
-void elink_alogrithm_init(void);
-void elink_alogrithm_shutdown(void);
-int elink_rparse_data(void);
+void elink_algorithm_init(void);
+void elink_algorithm_shutdown(void);
 
 #endif
