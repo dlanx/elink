@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <syslog.h>
 
+#include <Elementary.h>
+#include <Eina.h>
+
 #undef DEBUG_ENABLE
 
 #define MAJOR "1"
@@ -12,16 +15,18 @@
 
 #define SIZE    1024
 #define LEN     512
-#define MAX_REMOTES 8
-#define DEFAULT_REPO "git@mipsandroid.com:mipsandroid/" /* must end of '/' */
+
+#define DEFAULT_WIDTH 6
+#define DEFAULT_HEIGHT 6
+
+#define WINDOW_WIDTH 360
+#define WINDOW_HEIGHT 360
+
 
 extern char *filename;
 extern FILE *fp;
 #define P(level, fmt, arg...)                       \
     do {                                            \
-        if (daemon_mode)                            \
-            syslog(LOG_INFO, level fmt, ##arg);     \
-        else                                        \
             fprintf(stderr, level fmt, ##arg);      \
     } while(0)
 
