@@ -76,6 +76,25 @@ elink_win_del(void *data, Evas_Object *obj, void *event_info)
 	elm_exit();
 }
 
+int elink_set_object_text(Evas *ev, int i, int j)
+{
+	Evas_Object *o;
+	char buf[32];
+	o = evas_object_text_add(ev);
+	evas_object_layer_set(o, 10);
+	evas_object_color_set(o, 255, 0, 0, 255);
+
+	evas_object_resize(o, i * RWIDTH, j * RHEIGHT);
+
+	snprintf(buf, 32, "%c.%c", 'A' + i, '0' + j);
+
+	evas_object_text_text_set(o, buf);
+	evas_object_text_font_set(o, "Vera", 10);
+	evas_object_pass_events_set(o, 1);
+	evas_object_move(o, i * RWIDTH, j * RHEIGHT);
+	evas_object_show(o);
+}
+
 EAPI int
 elm_main(int argc, char *argv[])
 {
@@ -105,6 +124,7 @@ elm_main(int argc, char *argv[])
 	rh = WINDOW_HEIGHT / DEFAULT_HEIGHT;
 
 	ev = evas_object_evas_get(win);
+
 	for (i=0; i<DEFAULT_HEIGHT; i++) {
 		for (j=0; j<DEFAULT_WIDTH; j++) {
 			Evas_Object **eo = &board[i * DEFAULT_WIDTH + j];
@@ -120,14 +140,18 @@ elm_main(int argc, char *argv[])
 				&elink_mouse_wheel,
 				&board[i * DEFAULT_WIDTH + j]);
 
+			evas_object_text_text_set(*eo,
+				"AS");
 
 			evas_object_resize(*eo, rw, rh);
 			evas_object_move(*eo, rw * j, rh * i);
 			evas_object_color_set(*eo, 20*i, 20*j, 13*i + 5*j, 255);
 			evas_object_show(*eo);
-		}
-	}
 
+			elink_set_object_text(ev, i, j);
+		}
+
+	}
 	evas_object_show(win);
 
 	ecore_timer_add(1, &elink_timer, NULL);

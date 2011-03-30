@@ -22,6 +22,8 @@
 #define WINDOW_WIDTH 360
 #define WINDOW_HEIGHT 360
 
+#define RWIDTH (WINDOW_WIDTH / DEFAULT_WIDTH)
+#define RHEIGHT (WINDOW_HEIGHT / DEFAULT_HEIGHT)
 
 extern char *filename;
 extern FILE *fp;
