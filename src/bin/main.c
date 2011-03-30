@@ -33,16 +33,11 @@ Eina_Bool elink_timer(void *data)
 static void
 elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 {
-	int i, j;
+	Evas_Object *o = (Evas_Object *)data;
+
 	elink_info("mouse down, catch\n");
-	for (i=0; i<DEFAULT_HEIGHT; i++) {
-		for (j=0; j<DEFAULT_WIDTH; j++)
-			if ((int)data == (int) &board[i * DEFAULT_WIDTH + j]) {
-				elink_info("found match obj i(%d) j(%d)\n",
-					i, j);
-				break;
-			}
-	}
+	evas_object_color_set(o, 0, 0, 0, 0);
+	evas_object_show(o);
 }
 
 static void
@@ -133,15 +128,12 @@ elm_main(int argc, char *argv[])
 			evas_object_event_callback_add(*eo,
 				EVAS_CALLBACK_MOUSE_DOWN,
 				&elink_mouse_down,
-				&board[i * DEFAULT_WIDTH + j]);
+				board[i * DEFAULT_WIDTH + j]);
 
 			evas_object_event_callback_add(*eo,
 				EVAS_CALLBACK_MOUSE_WHEEL,
 				&elink_mouse_wheel,
-				&board[i * DEFAULT_WIDTH + j]);
-
-			evas_object_text_text_set(*eo,
-				"AS");
+				board[i * DEFAULT_WIDTH + j]);
 
 			evas_object_resize(*eo, rw, rh);
 			evas_object_move(*eo, rw * j, rh * i);
