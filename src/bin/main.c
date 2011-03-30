@@ -37,30 +37,38 @@ Eina_Bool elink_timer(void *data)
 static void
 elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 {
-	elink_obj_t *eo = (elink_obj_t *)data;
+	elink_obj_t *en = (elink_obj_t *)data;
 	if (!es) {
-		es = eo;
+		es = en;
 		return;
 	}
 
-	if ((es->x == eo->x) || (es->y == eo->y)) {
+	if (!elink_algorithm_one_line(es, en)) {
 		elink_dbg("mouse down, previous: x(%d) y(%d)\n", es->x, es->y);
-		elink_dbg("mouse down, current: x(%d) y(%d)\n", eo->x, eo->y);
+		elink_dbg("mouse down, current: x(%d) y(%d)\n", en->x, en->y);
 		evas_object_color_set(es->rect, 0, 0, 0, 0);
 		evas_object_show(es->rect);
 
-		evas_object_color_set(eo->rect, 0, 0, 0, 0);
-		evas_object_show(eo->rect);
+		evas_object_color_set(en->rect, 0, 0, 0, 0);
+		evas_object_show(en->rect);
 	}
+
 	es = NULL;
 }
 
 static void
 elink_mouse_wheel(void *data, Evas *e, Evas_Object *obj, void *event_info)
 {
-	Evas_Object *o = (Evas_Object *)data;
-	elink_obj_t *eo = container_of(o, elink_obj_t, rect);
-	elink_info("mouse wheel, catch x(%d) y(%d)\n", eo->x, eo->y);
+	int i, j;
+	elink_obj_t *eo;
+	for (i=0; i < elink_x; i++) {
+		for (j=0; j < elink_y; j++) {
+			eo = elink_data + i * elink_x + j;
+			if (eo->retrived)
+				elink_dbg("trived x(%d) y(%d)", i, j);
+		}
+	}
+
 }
 
 static void
@@ -116,16 +124,15 @@ int elink_object_rect_create(Evas *ev, elink_obj_t *eo)
 int elink_object_text_set(Evas *ev, elink_obj_t *eo)
 {
 	Evas_Object *o;
-	char buf[32];
 	o = evas_object_text_add(ev);
 	evas_object_layer_set(o, 10);
 	evas_object_color_set(o, 255, 0, 0, 255);
 
 	evas_object_resize(o, eo->x * WIDTH, eo->y * HEIGHT);
 
-	snprintf(buf, 32, "%c.%c", 'A' + eo->x, '0' + eo->y);
+	snprintf(eo->name, 8, "%c.%c", 'A' + eo->x, '0' + eo->y);
 
-	evas_object_text_text_set(o, buf);
+	evas_object_text_text_set(o, eo->name);
 	evas_object_text_font_set(o, "Vera", 10);
 	evas_object_pass_events_set(o, 1);
 	evas_object_move(o, eo->x * WIDTH, eo->y * HEIGHT);
@@ -140,12 +147,17 @@ elm_main(int argc, char *argv[])
 	elink_obj_t *e;
 	int i, j, ret = 0;
 
-	elink_algorithm_init();
-	elink_log_init();
-
 	elink_data = (elink_obj_t *) malloc(elink_x * elink_y
 		* sizeof(elink_obj_t));
 
+	if (!elink_data)
+		return -1;
+
+	memset(elink_data , 0, elink_x * elink_y
+		* sizeof(elink_obj_t));
+
+	elink_algorithm_init();
+	elink_log_init();
 	win = elm_win_add(NULL, "main", ELM_WIN_BASIC);
 
 	elm_win_title_set(win, "Elinker Game");
@@ -161,10 +173,10 @@ elm_main(int argc, char *argv[])
 
 	ev = evas_object_evas_get(win);
 
-	for (i=0; i < elink_x; i++) {
-		for (j=0; j < elink_y; j++) {
+	for (i=0; i < elink_y; i++) {
+		for (j=0; j < elink_x; j++) {
 			e = elink_data + i * elink_x + j;
-			e->x = i; e->y = j;
+			e->x = j; e->y = i;
 			elink_object_rect_create(ev, e);
 		}
 	}

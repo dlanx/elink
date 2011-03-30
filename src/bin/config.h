@@ -14,7 +14,7 @@
 #define HEIGHT 60
 
 #define DEFAULT_X 6
-#define DEFAULT_Y 6
+#define DEFAULT_Y 7
 
 #define container_of(ptr, type, member) ({			\
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
