@@ -43,7 +43,8 @@ elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 		return;
 	}
 
-	if (!elink_algorithm_one_line(es, en)) {
+	if (!elink_algorithm_one_line(es, en, 0) ||
+		!elink_algorithm_one_corner(es, en)) {
 		elink_dbg("mouse down, previous: x(%d) y(%d)\n", es->x, es->y);
 		elink_dbg("mouse down, current: x(%d) y(%d)\n", en->x, en->y);
 		evas_object_color_set(es->rect, 0, 0, 0, 0);
@@ -52,6 +53,7 @@ elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 		evas_object_color_set(en->rect, 0, 0, 0, 0);
 		evas_object_show(en->rect);
 	}
+
 
 	es = NULL;
 }

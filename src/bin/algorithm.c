@@ -38,7 +38,7 @@ int elink_algorithm_rparse_data(void)
  * 0 for success
  * other for success
  */
-int elink_algorithm_one_line(elink_obj_t *o, elink_obj_t *n)
+int elink_algorithm_one_line(elink_obj_t *o, elink_obj_t *n, int no_check)
 {
 	elink_obj_t *t;
 	int i, min, max;
@@ -46,9 +46,10 @@ int elink_algorithm_one_line(elink_obj_t *o, elink_obj_t *n)
 	if (o->id != n->id)
 		return -1;
 #endif
-
-	if ((o->retrived) || (n->retrived))
-		return -1;
+	if (!no_check) {
+		if ((o->retrived) || (n->retrived))
+			return -1;
+	}
 
 	if ((o->x == n->x) && (o->y == n->y))
 		return -1;
@@ -57,7 +58,7 @@ int elink_algorithm_one_line(elink_obj_t *o, elink_obj_t *n)
 		return -1;
 
 	if (o->x == n->x) {
-		elink_dbg("o->y(%d), n->y(%d)", o->y, n->y);
+		elink_dbg("X: o->y(%d), n->y(%d)", o->y, n->y);
 		if (o->y > n->y) {
 			min = n->y;
 			max = o->y;
@@ -70,7 +71,7 @@ int elink_algorithm_one_line(elink_obj_t *o, elink_obj_t *n)
 			elink_dbg("i(%d) elink_x(%d), o->x(%d)",
 				i, elink_x, o->x);
 			if (!t->retrived) {
-				elink_dbg("name(%s) t->x(%d), y(%d)",
+				elink_dbg("err: name(%s) t->x(%d), y(%d)",
 						t->name, t->x, i);
 				return -1;
 			}
@@ -78,6 +79,7 @@ int elink_algorithm_one_line(elink_obj_t *o, elink_obj_t *n)
 	}
 
 	if (o->y == n->y) {
+		elink_dbg("Y: o->x(%d), n->x(%d)", o->x, n->x);
 		if (o->x > n->x) {
 			min = n->x;
 			max = o->x;
@@ -93,15 +95,42 @@ int elink_algorithm_one_line(elink_obj_t *o, elink_obj_t *n)
 			}
 		}
 	}
-	
-	elink_dbg("o->x(%d), o->y(%d)\n", o->x, o->y);
-	elink_dbg("n->x(%d), n->y(%d)\n", n->x, n->y);
-	o->retrived = 1;
-	n->retrived = 1;
+
+	if (!no_check) {
+		o->retrived = 1;
+		n->retrived = 1;
+	}
 	return 0;
 }
 
-void elink_algorithm_one_corner(void)
+int elink_algorithm_one_corner(elink_obj_t *o, elink_obj_t *n)
 {
+	elink_obj_t *t;
 
+	if ((o->retrived) || (n->retrived))
+		return -1;
+
+	if ((o->x == n->x) || (o->y == n->y))
+		return -1;
+
+	t = elink_data + o->y * elink_x + n->x;
+
+	if (t->retrived &&
+		!elink_algorithm_one_line(o, t, 1) &&
+		!elink_algorithm_one_line(n, t, 1)) {
+		o->retrived = 1;
+		n->retrived = 1;
+		return 0;
+	}
+
+	t = elink_data + n->y * elink_x + o->x;
+
+	if (t->retrived &&
+		!elink_algorithm_one_line(o, t, 1) &&
+		!elink_algorithm_one_line(n, t, 1)) {
+		o->retrived = 1;
+		n->retrived = 1;
+		return 0;
+	}
+	return -1;
 }
