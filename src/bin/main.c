@@ -236,8 +236,10 @@ elm_main(int argc, char *argv[])
 			e = elink_data + i * elink_x + j;
 			e->x = j; e->y = i;
 			elink_object_rect_create(ev, e);
-			elink_object_text_set(ev, e);
 			elink_object_image_setup(ev, e);
+#ifdef ELINK_SHOW_TEXT
+			elink_object_text_set(ev, e);
+#endif
 		}
 	}
 	evas_object_show(win);

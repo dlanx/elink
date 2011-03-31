@@ -8,13 +8,8 @@
 #include <Elementary.h>
 #include <Eina.h>
 
-#undef DEBUG_ENABLE
-
-#define WIDTH 60
-#define HEIGHT 60
-
-#define DEFAULT_X 6
-#define DEFAULT_Y 7
+#undef ELINK_DEBUG
+#define ELINK_SHOW_TEXT
 
 #define container_of(ptr, type, member) ({			\
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
@@ -25,7 +20,7 @@
             fprintf(stderr, level fmt, ##arg);      \
     } while(0)
 
-#ifdef DEBUG_ENABLE 
+#ifdef ELINK_DEBUG
 #define D(fmt, arg...) fprintf(stderr, "D: "fmt, ##arg);
 #else
 #define D(arg...)
