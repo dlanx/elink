@@ -16,6 +16,7 @@
 
 elink_obj_t *elink_data = NULL;
 elink_obj_t *es = NULL;
+Evas_Object *win;
 
 int elink_x = DEFAULT_X;
 int elink_y = DEFAULT_Y;
@@ -32,6 +33,24 @@ void usage(int argc, char *argv[])
 Eina_Bool elink_timer(void *data)
 {
 	return 1;
+}
+
+int elink_obj_create(void)
+{
+	elink_data = (elink_obj_t *) malloc(elink_x * elink_y
+		* sizeof(elink_obj_t));
+
+	if (!elink_data)
+		return -1;
+
+	memset(elink_data , 0, elink_x * elink_y
+		* sizeof(elink_obj_t));
+	return 0;
+}
+
+int elink_obj_destroy(void)
+{
+	free(elink_data);
 }
 
 static void
@@ -141,6 +160,7 @@ int elink_object_image_setup(Evas *ev, elink_obj_t *e)
 	snprintf(buf, sizeof(buf), "data/images/icon_%02d.png",
 		value);
 	evas_object_image_file_set(o, buf, NULL);
+
 	evas_object_image_fill_set(o, 0, 0, WIDTH, HEIGHT);
 	evas_object_pass_events_set(o, 1);
 	evas_object_show(o);
@@ -154,15 +174,25 @@ int elink_object_bg_setup(Evas *ev)
 {
 	Evas_Object *o;
 	char buf[128];
+	int x, y;
 
 	o = evas_object_image_add(ev);
 	evas_object_move(o, 0, 0);
-	evas_object_resize(o, WIDTH * elink_x, HEIGHT * elink_y);
 	evas_object_layer_set(o, 12);
 	evas_object_color_set(o, 255, 255, 255, 255);
 	snprintf(buf, sizeof(buf), "data/images/bg.jpg");
 	evas_object_image_file_set(o, buf, NULL);
+	evas_object_image_size_get(o, &x, &y);
+	elink_x = (x + WIDTH) / WIDTH;
+	elink_y = (y + HEIGHT) / HEIGHT;
+	evas_object_resize(o, WIDTH * elink_x, HEIGHT * elink_y);
+	evas_object_resize(win, WIDTH * elink_x, HEIGHT * elink_y);
+
 	evas_object_image_fill_set(o, 0, 0, WIDTH * elink_x, HEIGHT * elink_y);
+
+	elink_info("back ground image w(%d) h(%d), render to x(%d) y(%d)\n",
+		x, y, WIDTH * elink_x, HEIGHT * elink_y);
+
 	evas_object_pass_events_set(o, 1);
 	evas_object_show(o);
 }
@@ -195,19 +225,13 @@ int elink_object_rect_create(Evas *ev, elink_obj_t *eo)
 EAPI int
 elm_main(int argc, char *argv[])
 {
-	Evas_Object *win;
 	Evas *ev;
 	elink_obj_t *e;
 	int i, j, ret = 0;
-
-	elink_data = (elink_obj_t *) malloc(elink_x * elink_y
-		* sizeof(elink_obj_t));
-
-	if (!elink_data)
-		return -1;
-
-	memset(elink_data , 0, elink_x * elink_y
-		* sizeof(elink_obj_t));
+	if (argc > 2) {
+		elink_x = atoi(argv[1]);
+		elink_y = atoi(argv[2]);
+	}
 
 	elink_algorithm_init();
 	elink_log_init();
@@ -222,11 +246,12 @@ elm_main(int argc, char *argv[])
 	evas_object_smart_callback_add(win, "delete,request",
 		elink_win_del, NULL);
 
-	evas_object_resize(win, elink_x * WIDTH, elink_y * HEIGHT);
-
 	ev = evas_object_evas_get(win);
 
 	elink_object_bg_setup(ev);
+	if (elink_obj_create())
+		goto out;
+
 	for (i=0; i < elink_y; i++) {
 		for (j=0; j < elink_x; j++) {
 			e = elink_data + i * elink_x + j;
@@ -243,8 +268,8 @@ elm_main(int argc, char *argv[])
 	ecore_timer_add(1, &elink_timer, NULL);
 
 	elm_run();
-
-	free(elink_data);
+	elink_obj_destroy();
+out:
 	elink_log_shutdown();
 	elink_algorithm_shutdown();
 	elm_shutdown();
