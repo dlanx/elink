@@ -148,7 +148,6 @@ int elink_object_image_setup(Evas *ev, elink_obj_t *e)
 {
 	Evas_Object *o;
 	char buf[128];
-	int value;
 
 	o = evas_object_image_add(ev);
 	evas_object_move(o, e->x * WIDTH, e->y * HEIGHT);
@@ -156,9 +155,8 @@ int elink_object_image_setup(Evas *ev, elink_obj_t *e)
 	evas_object_layer_set(o, 12);
 	evas_object_color_set(o, 255, 255, 255, 255);
 
-	value = (e->x * elink_x + e->y) % 36;
-	snprintf(buf, sizeof(buf), "data/images/icon_%02d.png",
-		value);
+	e->id = random() % 36;
+	snprintf(buf, sizeof(buf), "data/images/icon_%02d.png", e->id);
 	evas_object_image_file_set(o, buf, NULL);
 
 	evas_object_image_fill_set(o, 0, 0, WIDTH, HEIGHT);
@@ -237,7 +235,7 @@ elm_main(int argc, char *argv[])
 	elink_log_init();
 	win = elm_win_add(NULL, "main", ELM_WIN_BASIC);
 
-	elm_win_title_set(win, "Elinker Game");
+	elm_win_title_set(win, ELINK_NAME);
 
 	evas_object_focus_set(win, 1);
 
