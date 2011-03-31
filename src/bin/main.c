@@ -48,11 +48,11 @@ elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 		elink_dbg("mouse down, previous: x(%d) y(%d)\n", es->x, es->y);
 		elink_dbg("mouse down, current: x(%d) y(%d)\n", en->x, en->y);
 		evas_object_color_set(es->rect, 0, 0, 0, 0);
-		evas_object_show(es->rect);
+		evas_object_hide(es->rect);
 		evas_object_hide(es->img);
 
 		evas_object_color_set(en->rect, 0, 0, 0, 0);
-		evas_object_show(en->rect);
+		evas_object_hide(en->rect);
 		evas_object_hide(en->img);
 	}
 
@@ -152,34 +152,19 @@ int elink_object_image_setup(Evas *ev, elink_obj_t *e)
 
 int elink_object_bg_setup(Evas *ev)
 {
-   Evas_Object *o;
-   char buf[128];
+	Evas_Object *o;
+	char buf[128];
 
-   o = evas_object_image_add(ev);
-   evas_object_move(o, 0, 0);
-   evas_object_resize(o, elink_x, elink_y);
-   evas_object_layer_set(o, -999);
-   evas_object_color_set(o, 255, 255, 255, 255);
-   snprintf(buf, sizeof(buf), "data/images/bg.png");
-   evas_object_image_file_set(o, buf, NULL);
-   evas_object_image_fill_set(o, 0, 0, 128, 128);
-   evas_object_pass_events_set(o, 1);
-   evas_object_show(o);
-   evas_object_focus_set(o, 1);
-   evas_object_event_callback_add(o, EVAS_CALLBACK_KEY_DOWN,
-	elink_bg_key_down, NULL);
-
-   o = evas_object_image_add(ev);
-   evas_object_move(o, 0, 0);
-   evas_object_resize(o, WIDTH, HEIGHT);
-   evas_object_layer_set(o, -999);
-   evas_object_color_set(o, 255, 255, 255, 255);
-   snprintf(buf, sizeof(buf), "data/images/shadow.png");
-   evas_object_image_file_set(o, buf, NULL);
-   evas_object_image_smooth_scale_set(o, 0);
-   evas_object_image_fill_set(o, 0, 0, elink_x, elink_y);
-   evas_object_pass_events_set(o, 1);
-   evas_object_show(o);
+	o = evas_object_image_add(ev);
+	evas_object_move(o, 0, 0);
+	evas_object_resize(o, WIDTH * elink_x, HEIGHT * elink_y);
+	evas_object_layer_set(o, 12);
+	evas_object_color_set(o, 255, 255, 255, 255);
+	snprintf(buf, sizeof(buf), "data/images/bg.jpg");
+	evas_object_image_file_set(o, buf, NULL);
+	evas_object_image_fill_set(o, 0, 0, WIDTH * elink_x, HEIGHT * elink_y);
+	evas_object_pass_events_set(o, 1);
+	evas_object_show(o);
 }
 
 int elink_object_rect_create(Evas *ev, elink_obj_t *eo)
@@ -241,6 +226,7 @@ elm_main(int argc, char *argv[])
 
 	ev = evas_object_evas_get(win);
 
+	elink_object_bg_setup(ev);
 	for (i=0; i < elink_y; i++) {
 		for (j=0; j < elink_x; j++) {
 			e = elink_data + i * elink_x + j;
