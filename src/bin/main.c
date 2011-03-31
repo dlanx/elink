@@ -49,9 +49,11 @@ elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 		elink_dbg("mouse down, current: x(%d) y(%d)\n", en->x, en->y);
 		evas_object_color_set(es->rect, 0, 0, 0, 0);
 		evas_object_show(es->rect);
+		evas_object_hide(es->img);
 
 		evas_object_color_set(en->rect, 0, 0, 0, 0);
 		evas_object_show(en->rect);
+		evas_object_hide(en->img);
 	}
 
 
@@ -120,20 +122,24 @@ int elink_object_text_set(Evas *ev, elink_obj_t *eo)
 	evas_object_pass_events_set(o, 1);
 	evas_object_move(o, eo->x * WIDTH, eo->y * HEIGHT);
 	evas_object_show(o);
+	eo->text = o;
 }
 
 int elink_object_image_setup(Evas *ev, elink_obj_t *e)
 {
 	Evas_Object *o;
 	char buf[128];
+	int value;
 
 	o = evas_object_image_add(ev);
 	evas_object_move(o, e->x * WIDTH, e->y * HEIGHT);
 	evas_object_resize(o, WIDTH, HEIGHT);
 	evas_object_layer_set(o, 12);
 	evas_object_color_set(o, 255, 255, 255, 255);
-	snprintf(buf, sizeof(buf), "data/images/e%03d.png",
-		e->x * elink_x + e->y);
+
+	value = (e->x * elink_x + e->y) % 36;
+	snprintf(buf, sizeof(buf), "data/images/icon_%02d.png",
+		value);
 	evas_object_image_file_set(o, buf, NULL);
 	evas_object_image_fill_set(o, 0, 0, WIDTH, HEIGHT);
 	evas_object_pass_events_set(o, 1);
@@ -141,6 +147,7 @@ int elink_object_image_setup(Evas *ev, elink_obj_t *e)
 	evas_object_focus_set(o, 1);
 	evas_object_event_callback_add(o, EVAS_CALLBACK_KEY_DOWN,
 	elink_bg_key_down, NULL);
+	e->img = o;
 }
 
 int elink_object_bg_setup(Evas *ev)
@@ -177,24 +184,27 @@ int elink_object_bg_setup(Evas *ev)
 
 int elink_object_rect_create(Evas *ev, elink_obj_t *eo)
 {
-	eo->rect = evas_object_rectangle_add(ev);
+	Evas_Object *o;
+	o = evas_object_rectangle_add(ev);
 
-	evas_object_event_callback_add(eo->rect,
+	evas_object_event_callback_add(
+		o,
 		EVAS_CALLBACK_MOUSE_DOWN,
 		&elink_mouse_down,
 		eo);
 
-	evas_object_event_callback_add(eo->rect,
+	evas_object_event_callback_add(
+		o,
 		EVAS_CALLBACK_MOUSE_WHEEL,
-		&elink_mouse_wheel,
-		eo->rect);
+		&elink_mouse_wheel, eo);
 
-	evas_object_resize(eo->rect, WIDTH, HEIGHT);
-	evas_object_move(eo->rect, WIDTH * eo->x, HEIGHT * eo->y);
+	evas_object_resize(o, WIDTH, HEIGHT);
+	evas_object_move(o, WIDTH * eo->x, HEIGHT * eo->y);
 
-	evas_object_color_set(eo->rect, 20 * eo->x, 20 * eo->y,
+	evas_object_color_set(o, 20 * eo->x, 20 * eo->y,
 		13 * eo->x + 5 * eo->y, 255);
-	evas_object_show(eo->rect);
+	evas_object_show(o);
+	eo->rect = o;
 }
 
 EAPI int

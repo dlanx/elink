@@ -16,6 +16,7 @@ typedef struct elink_obj {
 	char retrived;	
 	Evas_Object *rect;
 	Evas_Object *text;
+	Evas_Object *img;
 }elink_obj_t;
 
 extern int elink_x;
