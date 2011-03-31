@@ -96,6 +96,83 @@ elink_win_del(void *data, Evas_Object *obj, void *event_info)
 	elm_exit();
 }
 
+static void elink_bg_key_down(void *data, Evas * e,
+	Evas_Object * obj, void *event_info)
+{
+	elink_dbg("elink_bg_key_down enter");
+}
+
+int elink_object_text_set(Evas *ev, elink_obj_t *eo)
+{
+	Evas_Object *o;
+	o = evas_object_text_add(ev);
+	evas_object_layer_set(o, 10);
+	evas_object_color_set(o, 255, 0, 0, 255);
+
+	evas_object_resize(o, eo->x * WIDTH, eo->y * HEIGHT);
+
+	snprintf(eo->name, 8, "%c.%c", 'A' + eo->x, '0' + eo->y);
+
+	evas_object_text_text_set(o, eo->name);
+	evas_object_text_font_set(o, "Vera", 10);
+	evas_object_pass_events_set(o, 1);
+	evas_object_move(o, eo->x * WIDTH, eo->y * HEIGHT);
+	evas_object_show(o);
+}
+
+int elink_object_image_setup(Evas *ev, elink_obj_t *e)
+{
+	Evas_Object *o;
+	char buf[128];
+
+	o = evas_object_image_add(ev);
+	evas_object_move(o, e->x * WIDTH, e->y * HEIGHT);
+	evas_object_resize(o, WIDTH, HEIGHT);
+	evas_object_layer_set(o, 12);
+	evas_object_color_set(o, 255, 255, 255, 255);
+	snprintf(buf, sizeof(buf), "data/images/e%03d.png",
+		e->x * elink_x + e->y);
+	evas_object_image_file_set(o, buf, NULL);
+	evas_object_image_fill_set(o, 0, 0, WIDTH, HEIGHT);
+	evas_object_pass_events_set(o, 1);
+	evas_object_show(o);
+	evas_object_focus_set(o, 1);
+	evas_object_event_callback_add(o, EVAS_CALLBACK_KEY_DOWN,
+	elink_bg_key_down, NULL);
+}
+
+int elink_object_bg_setup(Evas *ev)
+{
+   Evas_Object *o;
+   char buf[128];
+
+   o = evas_object_image_add(ev);
+   evas_object_move(o, 0, 0);
+   evas_object_resize(o, elink_x, elink_y);
+   evas_object_layer_set(o, -999);
+   evas_object_color_set(o, 255, 255, 255, 255);
+   snprintf(buf, sizeof(buf), "data/images/bg.png");
+   evas_object_image_file_set(o, buf, NULL);
+   evas_object_image_fill_set(o, 0, 0, 128, 128);
+   evas_object_pass_events_set(o, 1);
+   evas_object_show(o);
+   evas_object_focus_set(o, 1);
+   evas_object_event_callback_add(o, EVAS_CALLBACK_KEY_DOWN,
+	elink_bg_key_down, NULL);
+
+   o = evas_object_image_add(ev);
+   evas_object_move(o, 0, 0);
+   evas_object_resize(o, WIDTH, HEIGHT);
+   evas_object_layer_set(o, -999);
+   evas_object_color_set(o, 255, 255, 255, 255);
+   snprintf(buf, sizeof(buf), "data/images/shadow.png");
+   evas_object_image_file_set(o, buf, NULL);
+   evas_object_image_smooth_scale_set(o, 0);
+   evas_object_image_fill_set(o, 0, 0, elink_x, elink_y);
+   evas_object_pass_events_set(o, 1);
+   evas_object_show(o);
+}
+
 int elink_object_rect_create(Evas *ev, elink_obj_t *eo)
 {
 	eo->rect = evas_object_rectangle_add(ev);
@@ -116,27 +193,6 @@ int elink_object_rect_create(Evas *ev, elink_obj_t *eo)
 	evas_object_color_set(eo->rect, 20 * eo->x, 20 * eo->y,
 		13 * eo->x + 5 * eo->y, 255);
 	evas_object_show(eo->rect);
-
-	/* create text */
-	elink_object_text_set(ev, eo);
-}
-
-int elink_object_text_set(Evas *ev, elink_obj_t *eo)
-{
-	Evas_Object *o;
-	o = evas_object_text_add(ev);
-	evas_object_layer_set(o, 10);
-	evas_object_color_set(o, 255, 0, 0, 255);
-
-	evas_object_resize(o, eo->x * WIDTH, eo->y * HEIGHT);
-
-	snprintf(eo->name, 8, "%c.%c", 'A' + eo->x, '0' + eo->y);
-
-	evas_object_text_text_set(o, eo->name);
-	evas_object_text_font_set(o, "Vera", 10);
-	evas_object_pass_events_set(o, 1);
-	evas_object_move(o, eo->x * WIDTH, eo->y * HEIGHT);
-	evas_object_show(o);
 }
 
 EAPI int
@@ -178,6 +234,8 @@ elm_main(int argc, char *argv[])
 			e = elink_data + i * elink_x + j;
 			e->x = j; e->y = i;
 			elink_object_rect_create(ev, e);
+			elink_object_text_set(ev, e);
+			elink_object_image_setup(ev, e);
 		}
 	}
 	evas_object_show(win);
