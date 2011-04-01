@@ -18,6 +18,8 @@ elink_obj_t *elink_data = NULL;
 elink_obj_t *es = NULL;
 Evas_Object *win;
 
+elink_map_t map[NUM_OF_IMAGES + 1];
+
 int elink_x = DEFAULT_X;
 int elink_y = DEFAULT_Y;
 
@@ -52,6 +54,9 @@ int elink_obj_init(Evas *ev)
 {
 	int i, j;
 	elink_obj_t *e;
+	elink_obj_t *t = NULL;
+
+	memset(map, 0, (NUM_OF_IMAGES + 1) * sizeof(elink_map_t));
 
 	for (i=0; i < elink_y; i++) {
 		for (j=0; j < elink_x; j++) {
@@ -64,6 +69,26 @@ int elink_obj_init(Evas *ev)
 				e->retrived = -1;
 			} else {
 				e->id = random() % NUM_OF_IMAGES + 1;
+				map[e->id].count++;
+				map[e->id].o = e;
+			}
+		}
+	}
+	for (i = 1; i <= NUM_OF_IMAGES; i++) {
+		if (map[i].count & 0x1) {
+			if (!t) {
+				t = map[i].o;
+			} else {
+				elink_info("ajust id from %d, to %d", t->id, i);
+				t->id = i;
+				t = NULL;
+			}
+		}
+	}
+	for (i=0; i < elink_y; i++) {
+		for (j=0; j < elink_x; j++) {
+			e = elink_data + i * elink_x + j;
+			if (e->id) {
 				elink_object_rect_create(ev, e);
 				elink_object_image_setup(ev, e);
 #ifdef ELINK_SHOW_TEXT
@@ -168,6 +193,25 @@ int elink_object_text_set(Evas *ev, elink_obj_t *eo)
 	eo->text = o;
 }
 
+int elink_object_image_change(Evas *ev, elink_obj_t *e)
+{
+	Evas_Object *o;
+	char buf[128];
+
+	o = evas_object_image_add(ev);
+	evas_object_move(o, e->x * WIDTH, e->y * HEIGHT);
+	evas_object_resize(o, WIDTH, HEIGHT);
+	evas_object_layer_set(o, 12);
+	evas_object_color_set(o, 255, 255, 255, 255);
+
+	snprintf(buf, sizeof(buf), "data/images/icon_%02d.png", e->id);
+	evas_object_image_file_set(o, buf, NULL);
+
+	evas_object_image_fill_set(o, 0, 0, WIDTH, HEIGHT);
+	evas_object_pass_events_set(o, 1);
+	evas_object_show(o);
+}
+
 int elink_object_image_setup(Evas *ev, elink_obj_t *e)
 {
 	Evas_Object *o;
@@ -207,6 +251,7 @@ int elink_object_bg_setup(Evas *ev)
 
 	elink_x = (x + WIDTH) / WIDTH + 2;
 	elink_y = (y + HEIGHT) / HEIGHT + 2;
+
 	evas_object_resize(o, WIDTH * elink_x, HEIGHT * elink_y);
 	evas_object_resize(win, WIDTH * elink_x, HEIGHT * elink_y);
 
