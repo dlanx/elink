@@ -34,22 +34,51 @@ int elink_algorithm_rparse_data(void)
 	eina_matrixsparse_free(m);
 }
 
-/* return value:
- * 0 for success
- * other for success
- */
-int elink_algorithm_one_line(elink_obj_t *o, elink_obj_t *n, int no_check)
+int elink_algorithm_vertical(elink_obj_t *o, elink_obj_t *n)
 {
 	elink_obj_t *t;
 	int i, min, max;
-#if 0
-	if (o->id != n->id)
-		return -1;
-#endif
-	if (!no_check) {
-		if ((o->retrived) || (n->retrived))
+
+	elink_dbg("X: o->y(%d), n->y(%d)", o->y, n->y);
+	min = o->y > n->y ? n->y : o->y;
+	max = o->y > n->y ? o->y : n->y;
+	for (i = (min + 1); i < max; i++) {
+		t = elink_data + i * elink_x + o->x;
+		elink_dbg("i(%d) elink_x(%d), o->x(%d)",
+			i, elink_x, o->x);
+		if (!t->retrived) {
+			elink_dbg("err: name(%s) t->x(%d), y(%d)",
+					t->name, t->x, i);
 			return -1;
+		}
 	}
+	return 0;
+}
+
+int elink_algorithm_horizon(elink_obj_t *o, elink_obj_t *n)
+{
+	elink_obj_t *t;
+	int i, min, max;
+
+	elink_dbg("Y: o->x(%d), n->x(%d)", o->x, n->x);
+	min = o->x > n->x ? n->x : o->x;
+	max = o->x > n->x ? o->x : n->x;
+	for (i = min + 1; i < max; i++) {
+		t = elink_data + o->y * elink_x + i;
+		if (!t->retrived) {
+			elink_dbg("x(%d), o->y(%d)\n", i, o->y);
+			return -1;
+		}
+	}
+	return 0;
+}
+
+int elink_algorithm_one_line(elink_obj_t *o, elink_obj_t *n, int no_check)
+{
+	int ret;
+	if ((!no_check) &&
+		((o->retrived) || (n->retrived)))
+		return -1;
 
 	if ((o->x == n->x) && (o->y == n->y))
 		return -1;
@@ -57,50 +86,20 @@ int elink_algorithm_one_line(elink_obj_t *o, elink_obj_t *n, int no_check)
 	if ((o->x != n->x) && (o->y != n->y))
 		return -1;
 
-	if (o->x == n->x) {
-		elink_dbg("X: o->y(%d), n->y(%d)", o->y, n->y);
-		if (o->y > n->y) {
-			min = n->y;
-			max = o->y;
-		} else {
-			min = o->y;
-			max = n->y;
-		}
-		for (i = (min + 1); i < max; i++) {
-			t = elink_data + i * elink_x + o->x;
-			elink_dbg("i(%d) elink_x(%d), o->x(%d)",
-				i, elink_x, o->x);
-			if (!t->retrived) {
-				elink_dbg("err: name(%s) t->x(%d), y(%d)",
-						t->name, t->x, i);
-				return -1;
-			}
-		}
-	}
+	ret = -1;
+	if ((o->x == n->x) &&
+		!elink_algorithm_vertical(o, n))
+		ret = 0;
 
-	if (o->y == n->y) {
-		elink_dbg("Y: o->x(%d), n->x(%d)", o->x, n->x);
-		if (o->x > n->x) {
-			min = n->x;
-			max = o->x;
-		} else {
-			min = o->x;
-			max = n->x;
-		}
-		for (i = min + 1; i < max; i++) {
-			t = elink_data + o->y * elink_x + i;
-			if (!t->retrived) {
-				elink_dbg("x(%d), o->y(%d)\n", i, o->y);
-				return -1;
-			}
-		}
-	}
+	if ((o->y == n->y) &&
+		!elink_algorithm_horizon(o, n))
+		ret = 0;
 
 	if (!no_check) {
 		o->retrived = 1;
 		n->retrived = 1;
 	}
-	return 0;
+	return ret;
 }
 
 int elink_algorithm_one_corner(elink_obj_t *o, elink_obj_t *n)
@@ -133,4 +132,14 @@ int elink_algorithm_one_corner(elink_obj_t *o, elink_obj_t *n)
 		return 0;
 	}
 	return -1;
+}
+
+int elink_algorithm_scan(elink_obj_t *o, elink_obj_t *n)
+{
+
+}
+
+int elink_algorithm_triple(elink_obj_t *o, elink_obj_t *n)
+{
+
 }
