@@ -12,6 +12,8 @@
 #define ELINK_SHOW_TEXT
 #define ELINK_NAME "Elinker Game"
 
+#define NUM_OF_IMAGES (36)
+
 #define container_of(ptr, type, member) ({			\
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
 	(type *)( (char *)__mptr - offsetof(type,member) );})

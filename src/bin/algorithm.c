@@ -167,7 +167,6 @@ int elink_algorithm_all(elink_obj_t *o, elink_obj_t *n)
 	if ((o->retrived) || (n->retrived))
 		return -1;
 
-	elink_dbg("elink_algorithm all enter");
 	if (!elink_algorithm_one_line(o, n, 0))
 		ret = 0;
 	else if (!elink_algorithm_one_corner(o, n))

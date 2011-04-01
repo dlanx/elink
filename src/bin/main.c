@@ -35,7 +35,7 @@ Eina_Bool elink_timer(void *data)
 	return 1;
 }
 
-int elink_obj_create(void)
+int elink_obj_alloc(void)
 {
 	elink_data = (elink_obj_t *) malloc(elink_x * elink_y
 		* sizeof(elink_obj_t));
@@ -46,6 +46,32 @@ int elink_obj_create(void)
 	memset(elink_data , 0, elink_x * elink_y
 		* sizeof(elink_obj_t));
 	return 0;
+}
+
+int elink_obj_init(Evas *ev)
+{
+	int i, j;
+	elink_obj_t *e;
+
+	for (i=0; i < elink_y; i++) {
+		for (j=0; j < elink_x; j++) {
+			e = elink_data + i * elink_x + j;
+			e->x = j; e->y = i;
+			if ((i == 0) || (j == 0)
+				|| (i == (elink_y - 1))
+				|| (j == (elink_x - 1))) {
+				e->id = 0;
+				e->retrived = -1;
+			} else {
+				e->id = random() % NUM_OF_IMAGES + 1;
+				elink_object_rect_create(ev, e);
+				elink_object_image_setup(ev, e);
+#ifdef ELINK_SHOW_TEXT
+				elink_object_text_set(ev, e);
+#endif
+			}
+		}
+	}
 }
 
 int elink_obj_destroy(void)
@@ -153,7 +179,6 @@ int elink_object_image_setup(Evas *ev, elink_obj_t *e)
 	evas_object_layer_set(o, 12);
 	evas_object_color_set(o, 255, 255, 255, 255);
 
-	e->id = random() % 36 + 1;
 	snprintf(buf, sizeof(buf), "data/images/icon_%02d.png", e->id);
 	evas_object_image_file_set(o, buf, NULL);
 
@@ -179,6 +204,7 @@ int elink_object_bg_setup(Evas *ev)
 	snprintf(buf, sizeof(buf), "data/images/bg.jpg");
 	evas_object_image_file_set(o, buf, NULL);
 	evas_object_image_size_get(o, &x, &y);
+
 	elink_x = (x + WIDTH) / WIDTH + 2;
 	elink_y = (y + HEIGHT) / HEIGHT + 2;
 	evas_object_resize(o, WIDTH * elink_x, HEIGHT * elink_y);
@@ -245,27 +271,11 @@ elm_main(int argc, char *argv[])
 	ev = evas_object_evas_get(win);
 
 	elink_object_bg_setup(ev);
-	if (elink_obj_create())
+	if (elink_obj_alloc())
 		goto out;
 
-	for (i=0; i < elink_y; i++) {
-		for (j=0; j < elink_x; j++) {
-			e = elink_data + i * elink_x + j;
-			e->x = j; e->y = i;
-			if ((i == 0) || (j == 0)
-				|| (i == (elink_y - 1))
-				|| (j == (elink_x - 1))) {
-				e->id = 0;
-				e->retrived = -1;
-			} else {
-				elink_object_rect_create(ev, e);
-				elink_object_image_setup(ev, e);
-#ifdef ELINK_SHOW_TEXT
-				elink_object_text_set(ev, e);
-#endif
-			}
-		}
-	}
+	elink_obj_init(ev);
+
 	evas_object_show(win);
 
 	ecore_timer_add(1, &elink_timer, NULL);
