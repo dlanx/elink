@@ -39,7 +39,7 @@ int elink_algorithm_vertical(elink_obj_t *o, elink_obj_t *n)
 	elink_obj_t *t;
 	int i, min, max;
 
-	elink_dbg("X: o->y(%d), n->y(%d)", o->y, n->y);
+	elink_dbg("vertical: X(%d), o->y(%d), n->y(%d)", o->x, o->y, n->y);
 	min = o->y > n->y ? n->y : o->y;
 	max = o->y > n->y ? o->y : n->y;
 	for (i = (min + 1); i < max; i++) {
@@ -60,7 +60,7 @@ int elink_algorithm_horizon(elink_obj_t *o, elink_obj_t *n)
 	elink_obj_t *t;
 	int i, min, max;
 
-	elink_dbg("Y: o->x(%d), n->x(%d)", o->x, n->x);
+	elink_dbg("horizon: Y(%d), o->x(%d), n->x(%d)", o->y, o->x, n->x);
 	min = o->x > n->x ? n->x : o->x;
 	max = o->x > n->x ? o->x : n->x;
 	for (i = min + 1; i < max; i++) {
@@ -157,6 +157,9 @@ int elink_algorithm_two_corner(elink_obj_t *o, elink_obj_t *n)
 int elink_algorithm_all(elink_obj_t *o, elink_obj_t *n)
 {
 	int ret = -1;
+
+	if (!o->id || !n->id)
+		return -1;
 
 	if (o->id != n->id)
 		return -1;

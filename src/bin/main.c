@@ -251,13 +251,13 @@ elm_main(int argc, char *argv[])
 	for (i=0; i < elink_y; i++) {
 		for (j=0; j < elink_x; j++) {
 			e = elink_data + i * elink_x + j;
+			e->x = j; e->y = i;
 			if ((i == 0) || (j == 0)
 				|| (i == (elink_y - 1))
 				|| (j == (elink_x - 1))) {
 				e->id = 0;
 				e->retrived = -1;
 			} else {
-				e->x = j; e->y = i;
 				elink_object_rect_create(ev, e);
 				elink_object_image_setup(ev, e);
 #ifdef ELINK_SHOW_TEXT
