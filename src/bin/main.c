@@ -74,17 +74,21 @@ int elink_obj_init(Evas *ev)
 			}
 		}
 	}
+
 	for (i = 1; i <= NUM_OF_IMAGES; i++) {
 		if (map[i].count & 0x1) {
 			if (!t) {
 				t = map[i].o;
+				map[i].count--;
 			} else {
 				elink_info("ajust id from %d, to %d", t->id, i);
 				t->id = i;
+				map[i].count++;
 				t = NULL;
 			}
 		}
 	}
+
 	for (i=0; i < elink_y; i++) {
 		for (j=0; j < elink_x; j++) {
 			e = elink_data + i * elink_x + j;
@@ -110,9 +114,12 @@ elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 	elink_obj_t *en = (elink_obj_t *)data;
 	if (!es) {
 		es = en;
+		evas_object_color_set(es->img, 100, 100, 100, 255);
 		return;
 	}
 	if (es != en && !elink_algorithm_all(es, en)) {
+
+		map[es->id].count -= 2;
 		elink_dbg("mouse down, previous: x(%d) y(%d)\n", es->x, es->y);
 		elink_dbg("mouse down, current: x(%d) y(%d)\n", en->x, en->y);
 		evas_object_color_set(es->rect, 0, 0, 0, 0);
@@ -122,10 +129,20 @@ elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 		evas_object_color_set(en->rect, 0, 0, 0, 0);
 		evas_object_hide(en->rect);
 		evas_object_hide(en->img);
+	} else {
+		elink_dbg("change color back: x(%d) y(%d)\n", es->x, es->y);
+		evas_object_color_set(es->img, 255, 255, 255, 255);
 	}
 
-
 	es = NULL;
+}
+
+static void
+elink_img_key_up(void *data, Evas *e, Evas_Object *obj, void *event_info)
+{
+	elink_obj_t *o = (elink_obj_t *) data;
+	elink_object_image_change(o);
+	elink_dbg("elink image key up x(%x) y(%d)", o->x, o->y);
 }
 
 static void
@@ -141,6 +158,8 @@ elink_mouse_wheel(void *data, Evas *e, Evas_Object *obj, void *event_info)
 		}
 	}
 
+	for(i = 1; i <= NUM_OF_IMAGES; i++)
+		elink_dbg("map: index(%d) count(%d)\n", i, map[i].count);
 }
 
 static void
@@ -193,18 +212,12 @@ int elink_object_text_set(Evas *ev, elink_obj_t *eo)
 	eo->text = o;
 }
 
-int elink_object_image_change(Evas *ev, elink_obj_t *e)
+int elink_object_image_change(elink_obj_t *e)
 {
-	Evas_Object *o;
+	Evas_Object *o = e->img;
 	char buf[128];
 
-	o = evas_object_image_add(ev);
-	evas_object_move(o, e->x * WIDTH, e->y * HEIGHT);
-	evas_object_resize(o, WIDTH, HEIGHT);
-	evas_object_layer_set(o, 12);
-	evas_object_color_set(o, 255, 255, 255, 255);
-
-	snprintf(buf, sizeof(buf), "data/images/icon_%02d.png", e->id);
+	snprintf(buf, sizeof(buf), "data/images/icon_%02d.png", 12);
 	evas_object_image_file_set(o, buf, NULL);
 
 	evas_object_image_fill_set(o, 0, 0, WIDTH, HEIGHT);
@@ -228,6 +241,12 @@ int elink_object_image_setup(Evas *ev, elink_obj_t *e)
 
 	evas_object_image_fill_set(o, 0, 0, WIDTH, HEIGHT);
 	evas_object_pass_events_set(o, 1);
+
+	evas_object_event_callback_add(
+		o,
+		EVAS_CALLBACK_KEY_UP,
+		&elink_img_key_up, e);
+
 	evas_object_show(o);
 	evas_object_focus_set(o, 1);
 	evas_object_event_callback_add(o, EVAS_CALLBACK_KEY_DOWN,
@@ -310,14 +329,19 @@ elm_main(int argc, char *argv[])
 
 	evas_object_event_callback_add(win, EVAS_CALLBACK_KEY_DOWN,
 		&elink_keydown, NULL);
+
 	evas_object_smart_callback_add(win, "delete,request",
 		elink_win_del, NULL);
 
 	ev = evas_object_evas_get(win);
 
+	evas_image_cache_set(ev, 3 * 1024 * 1024);
 	elink_object_bg_setup(ev);
 	if (elink_obj_alloc())
 		goto out;
+
+	evas_output_size_set(ev, elink_x, elink_y);
+	evas_output_viewport_set(ev, 0, 0, elink_x, elink_y);
 
 	elink_obj_init(ev);
 
