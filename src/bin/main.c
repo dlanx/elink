@@ -18,7 +18,7 @@ elink_obj_t *elink_data = NULL;
 elink_obj_t *es = NULL;
 Evas_Object *win;
 
-elink_map_t map[NUM_OF_IMAGES + 1];
+Eina_List *elink_list[NUM_OF_IMAGES + 1];
 
 int elink_x = DEFAULT_X;
 int elink_y = DEFAULT_Y;
@@ -50,13 +50,22 @@ int elink_obj_alloc(void)
 	return 0;
 }
 
+int elink_debug_last_item(void)
+{
+	static int i = 0;
+	elink_obj_t *e;
+	e = elink_data + elink_y * elink_x - 1;
+	elink_dbg("%d: last item id (%d), count(%d)\n", i++, e->id,
+		eina_list_count(elink_list[NUM_OF_IMAGES]));
+}
+
 int elink_obj_init(Evas *ev)
 {
 	int i, j;
 	elink_obj_t *e;
-	elink_obj_t *t = NULL;
+	Eina_List *t, *l;
 
-	memset(map, 0, (NUM_OF_IMAGES + 1) * sizeof(elink_map_t));
+	memset(elink_list, 0, (NUM_OF_IMAGES + 1) * sizeof(Eina_List *));
 
 	for (i=0; i < elink_y; i++) {
 		for (j=0; j < elink_x; j++) {
@@ -67,33 +76,32 @@ int elink_obj_init(Evas *ev)
 				|| (j == (elink_x - 1))) {
 				e->id = 0;
 				e->retrived = -1;
-
 			} else {
 				e->id = random() % NUM_OF_IMAGES + 1;
-				map[e->id].o = e;
-				map[e->id].list =
-					eina_list_append(map[e->id].list, e);
+				elink_list[e->id]=
+					eina_list_append(elink_list[e->id], e);
 				if (eina_error_get()) {
 					elink_err("Memory Low, Fail alloc List");
 				}
 			}
 		}
 	}
-
-	for (i = 1; i <= NUM_OF_IMAGES; i++) {
-		if (eina_list_count(map[i].list) & 0x1) {
+	for (i = 1, t = NULL; i <= NUM_OF_IMAGES; i++) {
+		if (eina_list_count(elink_list[i]) & 0x1) {
 			if (!t) {
-				t = map[i].o;
-
-				map[i].list =
-					eina_list_remove(map[i].list, t);
+				t = eina_list_last(elink_list[i]);
+				/* save data before free */
+				e = eina_list_data_get(t);
+				elink_info("odd list index one %d, id(%d)",
+					i, e->id);
+				elink_list[i]=
+					eina_list_remove_list(elink_list[i], t);
 			} else {
-				elink_info("ajust id from %d, to %d", t->id, i);
-				t->id = i;
-				/* change to current object */
-				t = map[i].o;
-				map[i].list =
-					eina_list_append(map[i].list, t);
+				elink_info("ajust id from %d, to %d", e->id, i);
+				e->id = i;
+
+				elink_list[i] =
+					eina_list_append(elink_list[i], e);
 				t = NULL;
 			}
 		}
@@ -122,8 +130,8 @@ int elink_show_links_data(void)
 	elink_dbg("walk through all link data");
 	for (i = 0; i< (NUM_OF_IMAGES + 1); i++) {
 		elink_dbg("icon type: %d, list count(%d)\n",
-			i, eina_list_count(map[i].list));
-		EINA_LIST_FOREACH(map[i].list, l, e) {
+			i, eina_list_count(elink_list[i]));
+		EINA_LIST_FOREACH(elink_list[i], l, e) {
 			elink_dbg("\t name(%s) id(%d)\n", e->name, e->id);
 		}
 	}
@@ -136,7 +144,7 @@ int elink_obj_destroy(void)
 
 int elink_obj_remove(elink_obj_t *o)
 {
-	map[o->id].list = eina_list_remove(map[o->id].list, o);
+	elink_list[o->id] = eina_list_remove(elink_list[o->id], o);
 	evas_object_del(o->rect);
 	o->rect = NULL;
 	evas_object_del(o->img);
@@ -160,7 +168,7 @@ elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 		elink_obj_remove(es);
 		elink_obj_remove(en);
 	} else {
-		elink_dbg("change color back: x(%d) y(%d)\n", es->x, es->y);
+		/* change color back */
 		evas_object_color_set(es->img, 255, 255, 255, 255);
 	}
 
@@ -189,8 +197,8 @@ elink_mouse_wheel(void *data, Evas *e, Evas_Object *obj, void *event_info)
 	}
 
 	for(i = 1; i <= NUM_OF_IMAGES; i++)
-		elink_dbg("map: index(%d) count(%d)\n", i,
-			eina_list_count(map[i].list));
+		elink_dbg("elink_list: index(%d) count(%d)\n", i,
+			eina_list_count(elink_list[i]));
 }
 
 static void

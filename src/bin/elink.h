@@ -20,11 +20,6 @@ typedef struct elink_obj {
 	Evas_Object *img;
 }elink_obj_t;
 
-typedef struct elink_map {
-	elink_obj_t *o;
-	Eina_List *list;
-}elink_map_t;
-
 extern int elink_x;
 extern int elink_y;
 
