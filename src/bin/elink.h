@@ -21,7 +21,6 @@ typedef struct elink_obj {
 }elink_obj_t;
 
 typedef struct elink_map {
-	int count;
 	elink_obj_t *o;
 	Eina_List *list;
 }elink_map_t;

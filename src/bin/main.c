@@ -134,6 +134,19 @@ int elink_obj_destroy(void)
 	free(elink_data);
 }
 
+int elink_obj_remove(elink_obj_t *o)
+{
+	map[o->id].list = eina_list_remove(map[o->id].list, o);
+	evas_object_del(o->rect);
+	o->rect = NULL;
+	evas_object_del(o->img);
+	o->img = NULL;
+#ifdef ELINK_SHOW_TEXT
+	evas_object_del(o->text);
+	o->text = NULL;
+#endif
+}
+
 static void
 elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 {
@@ -144,18 +157,8 @@ elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 		return;
 	}
 	if (es != en && !elink_algorithm_all(es, en)) {
-		map[es->id].list = eina_list_remove(map[es->id].list, es);
-		map[en->id].list = eina_list_remove(map[en->id].list, en);
-
-		elink_dbg("mouse down, previous: x(%d) y(%d)\n", es->x, es->y);
-		elink_dbg("mouse down, current: x(%d) y(%d)\n", en->x, en->y);
-		evas_object_color_set(es->rect, 0, 0, 0, 0);
-		evas_object_hide(es->rect);
-		evas_object_hide(es->img);
-
-		evas_object_color_set(en->rect, 0, 0, 0, 0);
-		evas_object_hide(en->rect);
-		evas_object_hide(en->img);
+		elink_obj_remove(es);
+		elink_obj_remove(en);
 	} else {
 		elink_dbg("change color back: x(%d) y(%d)\n", es->x, es->y);
 		evas_object_color_set(es->img, 255, 255, 255, 255);
@@ -225,6 +228,7 @@ static void elink_bg_key_down(void *data, Evas * e,
 	elink_dbg("elink_bg_key_down enter");
 }
 
+#ifdef ELINK_SHOW_TEXT
 int elink_object_text_set(Evas *ev, elink_obj_t *eo)
 {
 	Evas_Object *o;
@@ -243,6 +247,7 @@ int elink_object_text_set(Evas *ev, elink_obj_t *eo)
 	evas_object_show(o);
 	eo->text = o;
 }
+#endif
 
 int elink_object_image_change(elink_obj_t *e)
 {
