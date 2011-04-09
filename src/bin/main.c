@@ -67,23 +67,33 @@ int elink_obj_init(Evas *ev)
 				|| (j == (elink_x - 1))) {
 				e->id = 0;
 				e->retrived = -1;
+
 			} else {
 				e->id = random() % NUM_OF_IMAGES + 1;
-				map[e->id].count++;
 				map[e->id].o = e;
+				map[e->id].list =
+					eina_list_append(map[e->id].list, e);
+				if (eina_error_get()) {
+					elink_err("Memory Low, Fail alloc List");
+				}
 			}
 		}
 	}
 
 	for (i = 1; i <= NUM_OF_IMAGES; i++) {
-		if (map[i].count & 0x1) {
+		if (eina_list_count(map[i].list) & 0x1) {
 			if (!t) {
 				t = map[i].o;
-				map[i].count--;
+
+				map[i].list =
+					eina_list_remove(map[i].list, t);
 			} else {
 				elink_info("ajust id from %d, to %d", t->id, i);
 				t->id = i;
-				map[i].count++;
+				/* change to current object */
+				t = map[i].o;
+				map[i].list =
+					eina_list_append(map[i].list, t);
 				t = NULL;
 			}
 		}
@@ -103,6 +113,22 @@ int elink_obj_init(Evas *ev)
 	}
 }
 
+int elink_show_links_data(void)
+{
+	int i;
+	elink_obj_t *e;
+	Eina_List *l;
+
+	elink_dbg("walk through all link data");
+	for (i = 0; i< (NUM_OF_IMAGES + 1); i++) {
+		elink_dbg("icon type: %d, list count(%d)\n",
+			i, eina_list_count(map[i].list));
+		EINA_LIST_FOREACH(map[i].list, l, e) {
+			elink_dbg("\t name(%s) id(%d)\n", e->name, e->id);
+		}
+	}
+}
+
 int elink_obj_destroy(void)
 {
 	free(elink_data);
@@ -118,8 +144,9 @@ elink_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 		return;
 	}
 	if (es != en && !elink_algorithm_all(es, en)) {
+		map[es->id].list = eina_list_remove(map[es->id].list, es);
+		map[en->id].list = eina_list_remove(map[en->id].list, en);
 
-		map[es->id].count -= 2;
 		elink_dbg("mouse down, previous: x(%d) y(%d)\n", es->x, es->y);
 		elink_dbg("mouse down, current: x(%d) y(%d)\n", en->x, en->y);
 		evas_object_color_set(es->rect, 0, 0, 0, 0);
@@ -159,7 +186,8 @@ elink_mouse_wheel(void *data, Evas *e, Evas_Object *obj, void *event_info)
 	}
 
 	for(i = 1; i <= NUM_OF_IMAGES; i++)
-		elink_dbg("map: index(%d) count(%d)\n", i, map[i].count);
+		elink_dbg("map: index(%d) count(%d)\n", i,
+			eina_list_count(map[i].list));
 }
 
 static void
@@ -171,6 +199,10 @@ elink_keydown(void *data, Evas *e, Evas_Object *obj, void *event_info)
 		elink_info("get key 'q', exit program\n");
 		elm_exit();
 	}
+
+	if (!strcmp(ev->key, "d"))
+		elink_show_links_data();
+
 	if (!strcmp(ev->key, "space") || !strcmp(ev->key, "Down"))
 		elink_dbg("do_space\n");
 	else if (!strcmp(ev->key, "Left"))

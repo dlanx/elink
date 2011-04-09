@@ -1,6 +1,7 @@
 #ifndef ELINK_H
 #define ELINK_H
 #include <Evas.h>
+#include <Eina.h>
 
 #define WIDTH 60
 #define HEIGHT 60
@@ -22,6 +23,7 @@ typedef struct elink_obj {
 typedef struct elink_map {
 	int count;
 	elink_obj_t *o;
+	Eina_List *list;
 }elink_map_t;
 
 extern int elink_x;
