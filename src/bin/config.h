@@ -10,7 +10,7 @@
 
 #undef ELINK_DEBUG
 #define ELINK_SHOW_TEXT
-#define ELINK_NAME "Elinker Game"
+#define ELINK_NAME "Elink Game"
 
 #define NUM_OF_IMAGES (36)
 
