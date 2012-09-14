@@ -1,8 +1,8 @@
 dnl autoconf initialization
 AC_INIT(
-   [elinker],
+   [elink],
    [0.1],
-   [dennis.lan@actions-semi.com])
+   [dennis.yxun@gmail.com])
 AC_PREREQ(2.54)
 
 AM_INIT_AUTOMAKE([1.7 gnits dist-bzip2])
@@ -16,17 +16,9 @@ AC_PROG_CPP
 AC_PROG_CC
 AM_PROG_CC_C_O
 
-HAVE_LIBXML="yes"
-PKG_CHECK_MODULES(
-   [LIBXML],
-   [libxml-2.0],
-   [],
-   [$HAVE_LIBXML])
-if test "x${HAVE_LIBXML}" = "xno" ; then
-   AC_MSG_ERROR([Fatal Error: libxml 2.0 library not detected.])
-fi
-
-PKG_CHECK_MODULES(ELINK, eina elementary)
+PKG_CHECK_MODULES(ELINK,
+		  eina
+		  elementary)
 
 AC_CONFIG_FILES(
    [Makefile
