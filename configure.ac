@@ -1,7 +1,7 @@
 dnl autoconf initialization
 AC_INIT(
    [elink],
-   [0.1],
+   [0.1.0],
    [dennis.yxun@gmail.com])
 AC_PREREQ(2.54)
 
