@@ -262,7 +262,8 @@ int elink_object_image_change(elink_obj_t *e)
 	Evas_Object *o = e->img;
 	char buf[128];
 
-	snprintf(buf, sizeof(buf), "data/images/icon_%02d.png", 12);
+	snprintf(buf, sizeof(buf), "%s/images/icon_%02d.png",
+		ELINK_IMAGE_PATH, 12);
 	evas_object_image_file_set(o, buf, NULL);
 
 	evas_object_image_fill_set(o, 0, 0, WIDTH, HEIGHT);
@@ -281,7 +282,8 @@ int elink_object_image_setup(Evas *ev, elink_obj_t *e)
 	evas_object_layer_set(o, 12);
 	evas_object_color_set(o, 255, 255, 255, 255);
 
-	snprintf(buf, sizeof(buf), "data/images/icon_%02d.png", e->id);
+	snprintf(buf, sizeof(buf), "%s/images/icon_%02d.png",
+		ELINK_IMAGE_PATH, e->id);
 	evas_object_image_file_set(o, buf, NULL);
 
 	evas_object_image_fill_set(o, 0, 0, WIDTH, HEIGHT);
@@ -309,7 +311,7 @@ int elink_object_bg_setup(Evas *ev)
 	evas_object_move(o, 0, 0);
 	evas_object_layer_set(o, 12);
 	evas_object_color_set(o, 255, 255, 255, 255);
-	snprintf(buf, sizeof(buf), "data/images/bg.jpg");
+	snprintf(buf, sizeof(buf), "%s/images/bg.jpg", ELINK_IMAGE_PATH);
 	evas_object_image_file_set(o, buf, NULL);
 	evas_object_image_size_get(o, &x, &y);
 

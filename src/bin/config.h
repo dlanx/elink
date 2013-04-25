@@ -11,6 +11,7 @@
 #undef ELINK_DEBUG
 #define ELINK_SHOW_TEXT
 #define ELINK_NAME "Elink Game"
+#define ELINK_IMAGE_PATH "/usr/share/elink"
 
 #define NUM_OF_IMAGES (36)
 
