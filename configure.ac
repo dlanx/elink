@@ -24,5 +24,7 @@ AC_CONFIG_FILES(
    [Makefile
     src/Makefile
     m4/Makefile
+    data/Makefile
+    data/images/Makefile
     src/bin/Makefile])
 AC_OUTPUT

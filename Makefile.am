@@ -1,5 +1,5 @@
 
-SUBDIRS = m4 src
+SUBDIRS = m4 src data
 
 CLEANFILES = config.log Makefile.in
 
