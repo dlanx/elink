@@ -1,2 +1,12 @@
 
- * use libxml
+High
+ * better algorithm
+ * different level, has switch directions
+ * add background music support
+ * add progress bar support
+ * show link path
+ * detect mode, auto caculation
+ * edje style support, better group all images
+
+Low
+ * network support, two players for competition
